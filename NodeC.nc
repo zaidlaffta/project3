@@ -40,11 +40,11 @@ implementation {
     //components DistanceVectorRoutingC;
     //Node.DistanceVectorRouting -> DistanceVectorRoutingC;
 
-    //components TransportC;
-    //Node.Transport -> TransportC;
+    components TransportC;
+    Node.Transport -> TransportC;
 
-    //components TransportAppC;
-    //Node.TransportApp -> TransportAppC;
+    components TransportAppC;
+    Node.TransportApp -> TransportAppC;
 
     components LinkStateRoutingC;                   //Project4 integration
     Node.LinkStateRouting -> LinkStateRoutingC;
