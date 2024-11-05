@@ -1,0 +1,4 @@
+interface Map<t, s>{
+	
+
+}
