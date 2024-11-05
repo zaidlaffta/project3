@@ -45,7 +45,7 @@ implementation {
 
       call NeighborDiscovery.start();
       //call DistanceVectorRouting.start();
-      //call Transport.start();
+      call Transport.start();
       call LinkStateRouting.start();      //proj4
    }
 
@@ -118,19 +118,19 @@ implementation {
    event void CommandHandler.setTestServer(uint8_t port){
 
    		call TransportApp.startServer(port);
-   		dbg(TRANSPORT_CHANNEL, "Node %u listening on port %u\n", TOS_NODE_ID, port);
-   		dbg(TRANSPORT_CHANNEL, "Setting test server\n");
+   		dbg(GENERAL_CHANNEL, "Node %u listening on port %u\n", TOS_NODE_ID, port);
+   		dbg(GENERAL_CHANNEL, "Setting test server\n");
 
    }
 
    event void CommandHandler.setTestClient(uint8_t dest, uint8_t srcPort, uint8_t destPort, uint16_t transfer){
    		call TransportApp.startClient(dest, srcPort, destPort, transfer);
-        dbg(TRANSPORT_CHANNEL, "Node %u creating connection from port %u to port %u on node %u. Transferring bytes: %u\n", TOS_NODE_ID, srcPort, destPort, dest, transfer);
-        dbg(TRANSPORT_CHANNEL, "Setting test client\n");
+        dbg(GENERAL_CHANNEL, "Node %u creating connection from port %u to port %u on node %u. Transferring bytes: %u\n", TOS_NODE_ID, srcPort, destPort, dest, transfer);
+        dbg(GENERAL_CHANNEL, "Setting test client\n");
    }
 
    event void CommandHandler.setClientClose(uint8_t dest, uint8_t srcPort, uint8_t destPort) {
-        dbg(TRANSPORT_CHANNEL, "Node %u closing connection from port %u to port %u on node %u.\n", TOS_NODE_ID, srcPort, destPort, dest);
+        dbg(GENERAL_CHANNEL, "Node %u closing connection from port %u to port %u on node %u.\n", TOS_NODE_ID, srcPort, destPort, dest);
         call TransportApp.closeClient(dest, srcPort, destPort);
     }
 
