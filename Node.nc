@@ -111,7 +111,7 @@ implementation {
    //		call DistanceVectorRouting.printRouteTable();
    }
 
-   event void CommandHandler.printLinkState(){                               //Proj 4 integrations
+   event void CommandHandler.printLinkState(){                              
       call LinkStateRouting.printRouteTable();
    }
 
