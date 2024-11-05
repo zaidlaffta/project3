@@ -19,8 +19,8 @@ module Node{
 
    uses interface SplitControl as AMControl;
    uses interface Receive;
-   //uses interface Transport;
-   //uses interface TransportApp;
+   uses interface Transport;
+   uses interface TransportApp;
 
    uses interface SimpleSend as Sender;
 
@@ -96,7 +96,7 @@ implementation {
 
 
    event void CommandHandler.ping(uint16_t destination, uint8_t *payload){
-      //dbg(GENERAL_CHANNEL, "INITIATED ping\n");
+      dbg(GENERAL_CHANNEL, "INITIATED ping\n");
       //call Flooding.ping(destination, payload);
       //call DistanceVectorRouting.ping(destination, payload);
       call LinkStateRouting.ping(destination, payload);                    //Proj 4 integrations
@@ -117,21 +117,21 @@ implementation {
 
    event void CommandHandler.setTestServer(uint8_t port){
 
-   		//call TransportApp.startServer(port);
-   		//dbg(TRANSPORT_CHANNEL, "Node %u listening on port %u\n", TOS_NODE_ID, port);
-   		//dbg(TRANSPORT_CHANNEL, "Setting test server\n");
+   		call TransportApp.startServer(port);
+   		dbg(TRANSPORT_CHANNEL, "Node %u listening on port %u\n", TOS_NODE_ID, port);
+   		dbg(TRANSPORT_CHANNEL, "Setting test server\n");
 
    }
 
    event void CommandHandler.setTestClient(uint8_t dest, uint8_t srcPort, uint8_t destPort, uint16_t transfer){
-   		//call TransportApp.startClient(dest, srcPort, destPort, transfer);
-        //dbg(TRANSPORT_CHANNEL, "Node %u creating connection from port %u to port %u on node %u. Transferring bytes: %u\n", TOS_NODE_ID, srcPort, destPort, dest, transfer);
-        //dbg(TRANSPORT_CHANNEL, "Setting test client\n");
+   		call TransportApp.startClient(dest, srcPort, destPort, transfer);
+        dbg(TRANSPORT_CHANNEL, "Node %u creating connection from port %u to port %u on node %u. Transferring bytes: %u\n", TOS_NODE_ID, srcPort, destPort, dest, transfer);
+        dbg(TRANSPORT_CHANNEL, "Setting test client\n");
    }
 
    event void CommandHandler.setClientClose(uint8_t dest, uint8_t srcPort, uint8_t destPort) {
-        //dbg(TRANSPORT_CHANNEL, "Node %u closing connection from port %u to port %u on node %u.\n", TOS_NODE_ID, srcPort, destPort, dest);
-        //call TransportApp.closeClient(dest, srcPort, destPort);
+        dbg(TRANSPORT_CHANNEL, "Node %u closing connection from port %u to port %u on node %u.\n", TOS_NODE_ID, srcPort, destPort, dest);
+        call TransportApp.closeClient(dest, srcPort, destPort);
     }
 
    event void CommandHandler.setAppServer(){}
