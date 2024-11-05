@@ -175,17 +175,17 @@ implementation{
         uint8_t fd, newFd, src = package->src;
         tcp_pack* tcp_rcvd = (tcp_pack*) &package->payload;
         uint32_t socketId = 0;
-        //dbg(TRANSPORT_CHANNEL, "tcp_rcvd flag is %d\n",tcp_rcvd->flags);
+        //dbg(GENERAL_CHANNEL, "tcp_rcvd flag is %d\n",tcp_rcvd->flags);
         switch(tcp_rcvd->flags) {
             case DATA:
                 // Find socket fd
                 fd = findSocket(TOS_NODE_ID, tcp_rcvd->destPort, src, tcp_rcvd->srcPort);
                 switch(sockets[fd-1].state) {
                     case SYN_RCVD:
-                        dbg(TRANSPORT_CHANNEL, "Connection Established\n");
+                        dbg(GENERAL_CHANNEL, "Connection Established\n");
                         sockets[fd-1].state = ESTABLISHED;
                     case ESTABLISHED:
-                        //dbg(TRANSPORT_CHANNEL, "Data received on node %u via port %u\n", TOS_NODE_ID, tcp_rcvd->destPort);
+                        //dbg(GENERAL_CHANNEL, "Data received on node %u via port %u\n", TOS_NODE_ID, tcp_rcvd->destPort);
                         if(readInData(fd, tcp_rcvd))
                             // Send ACK
                             sendTCPPacket(fd, ACK);
@@ -198,13 +198,13 @@ implementation{
                 if(fd == 0)
                     break;
                 calculateRTT(fd);
-                //dbg(TRANSPORT_CHANNEL, "RTT now %u\n", sockets[fd-1].RTT);
+                //dbg(GENERAL_CHANNEL, "RTT now %u\n", sockets[fd-1].RTT);
                 switch(sockets[fd-1].state) {
                     case SYN_RCVD:
-                        dbg(TRANSPORT_CHANNEL, "ACK received on node %u via port %u\n", TOS_NODE_ID, tcp_rcvd->destPort);
+                        dbg(GENERAL_CHANNEL, "ACK received on node %u via port %u\n", TOS_NODE_ID, tcp_rcvd->destPort);
                         // Set state
                         sockets[fd-1].state = ESTABLISHED;
-                        dbg(TRANSPORT_CHANNEL, "Connection Established!\n");
+                        dbg(GENERAL_CHANNEL, "Connection Established!\n");
                         return SUCCESS;
                     case ESTABLISHED:
                         // Data ACK
@@ -212,7 +212,7 @@ implementation{
                         sockets[fd-1].effectiveWindow = tcp_rcvd->effectiveWindow;
                         return SUCCESS;
                     case FIN_WAIT_1:
-                        dbg(TRANSPORT_CHANNEL, "ACK received on node %u via port %u. Now in FIN_WAIT_2.\n", TOS_NODE_ID, tcp_rcvd->destPort);
+                        dbg(GENERAL_CHANNEL, "ACK received on node %u via port %u. Now in FIN_WAIT_2.\n", TOS_NODE_ID, tcp_rcvd->destPort);
                         // Set state
                         sockets[fd-1].state = FIN_WAIT_2;
                         return SUCCESS;
@@ -221,11 +221,11 @@ implementation{
                         sockets[fd-1].state = TIME_WAIT;
                         return SUCCESS;
                     case LAST_ACK:
-                        dbg(TRANSPORT_CHANNEL, "Received last ack. ZEROing socket.\n");
+                        dbg(GENERAL_CHANNEL, "Received last ack. ZEROing socket.\n");
                         zeroSocket(fd);
                         // Set state
                         sockets[fd-1].state = CLOSED;
-                        dbg(TRANSPORT_CHANNEL, "Connection Closed\n");
+                        dbg(GENERAL_CHANNEL, "Connection Closed\n");
                         return SUCCESS;
                 }
                 break;
@@ -236,7 +236,7 @@ implementation{
                     break;
                 switch(sockets[fd-1].state) {
                     case LISTEN:
-                        dbg(TRANSPORT_CHANNEL, "SYN recieved on node %u via port %u with seq %u\n", TOS_NODE_ID, tcp_rcvd->destPort, tcp_rcvd->seq);
+                        dbg(GENERAL_CHANNEL, "SYN recieved on node %u via port %u with seq %u\n", TOS_NODE_ID, tcp_rcvd->destPort, tcp_rcvd->seq);
                         // Create new active socket
                         newFd = cloneSocket(fd, package->src, tcp_rcvd->srcPort);
 
@@ -249,14 +249,14 @@ implementation{
                                 }
                             }
                             // Set state
-                            dbg(TRANSPORT_CHANNEL, "Received SYN with sequence num %u\n", tcp_rcvd->seq);
+                            dbg(GENERAL_CHANNEL, "Received SYN with sequence num %u\n", tcp_rcvd->seq);
                             sockets[newFd-1].state = SYN_RCVD;
                             sockets[newFd-1].lastRead = tcp_rcvd->seq;
                             sockets[newFd-1].lastRcvd = tcp_rcvd->seq;
                             sockets[newFd-1].nextExpected = tcp_rcvd->seq + 1;
                             // Send SYN_ACK
                             sendTCPPacket(newFd, SYN_ACK);
-                            dbg(TRANSPORT_CHANNEL, "SYN_ACK sent on node %u via port %u\n", TOS_NODE_ID, tcp_rcvd->destPort);
+                            dbg(GENERAL_CHANNEL, "SYN_ACK sent on node %u via port %u\n", TOS_NODE_ID, tcp_rcvd->destPort);
                             // Add the new fd to the socket map
                             socketId = (((uint32_t)TOS_NODE_ID) << 24) | (((uint32_t)tcp_rcvd->destPort) << 16) | (((uint32_t)src) << 8) | (((uint32_t)tcp_rcvd->srcPort));
                             call socketTable.insert(socketId, newFd);
@@ -265,7 +265,7 @@ implementation{
                 }
                 break;
             case SYN_ACK:
-                dbg(TRANSPORT_CHANNEL, "SYN_ACK received on node %u via port %u\n", TOS_NODE_ID, tcp_rcvd->destPort);
+                dbg(GENERAL_CHANNEL, "SYN_ACK received on node %u via port %u\n", TOS_NODE_ID, tcp_rcvd->destPort);
                 // Look up the socket
                 fd = findSocket(TOS_NODE_ID, tcp_rcvd->destPort, src, tcp_rcvd->srcPort);
                 if(sockets[fd-1].state == SYN_SENT) {
@@ -274,18 +274,18 @@ implementation{
                     sockets[fd-1].state = ESTABLISHED;
                     // Send ACK
                     sendTCPPacket(fd, ACK);
-                    dbg(TRANSPORT_CHANNEL, "ACK sent on node %u via port %u\n", TOS_NODE_ID, tcp_rcvd->destPort);
-                    dbg(TRANSPORT_CHANNEL, "Connection Established...\n");
+                    dbg(GENERAL_CHANNEL, "ACK sent on node %u via port %u\n", TOS_NODE_ID, tcp_rcvd->destPort);
+                    dbg(GENERAL_CHANNEL, "Connection Established...\n");
                     return SUCCESS;
                 }
                 break;
             case FIN:
                 // Find socket fd
                 fd = findSocket(TOS_NODE_ID, tcp_rcvd->destPort, src, tcp_rcvd->srcPort);
-                dbg(TRANSPORT_CHANNEL, "FIN Received\n");
+                dbg(GENERAL_CHANNEL, "FIN Received\n");
                 switch(sockets[fd-1].state) {
                     case ESTABLISHED:
-                        dbg(TRANSPORT_CHANNEL, "Converting to CLOSE_WAIT. Sending ACK.\n");
+                        dbg(GENERAL_CHANNEL, "Converting to CLOSE_WAIT. Sending ACK.\n");
                         // Send ACK
                         sendTCPPacket(fd, ACK);                        
                         // Set state
@@ -373,7 +373,7 @@ implementation{
         uint32_t socketId = 0;
         // Check for valid socket
         if(fd == 0 || fd > MAX_NUM_OF_SOCKETS || sockets[fd-1].state != NAMED) {
-            dbg(TRANSPORT_CHANNEL, "fd is %d\n",fd);
+            dbg(GENERAL_CHANNEL, "fd is %d\n",fd);
             return FAIL;
         }
         // Remove the old socket from the 
@@ -390,7 +390,7 @@ implementation{
         call socketTable.insert(socketId, fd);
         // Set SYN_SENT
         sockets[fd-1].state = SYN_SENT;
-        dbg(TRANSPORT_CHANNEL, "SYN sent on node %u via port %u\n", TOS_NODE_ID, sockets[fd-1].src.port);
+        dbg(GENERAL_CHANNEL, "SYN sent on node %u via port %u\n", TOS_NODE_ID, sockets[fd-1].src.port);
         return SUCCESS;
     }
 
@@ -432,11 +432,11 @@ implementation{
                 return SUCCESS;
             case ESTABLISHED:
             case SYN_RCVD:
-                dbg(TRANSPORT_CHANNEL, "Sending FIN\n");
+                dbg(GENERAL_CHANNEL, "Sending FIN\n");
                 // Initiate FIN sequence
                 sendTCPPacket(fd, FIN);
                 // Set FIN_WAIT_1
-                dbg(TRANSPORT_CHANNEL, "Updating to FIN_WAIT_1\n");
+                dbg(GENERAL_CHANNEL, "Updating to FIN_WAIT_1\n");
                 sockets[fd-1].state = FIN_WAIT_1;
                 return SUCCESS;
             case CLOSE_WAIT:
@@ -546,7 +546,7 @@ implementation{
             calculateRTO(fd);
         }
         makePack(&ipPack, TOS_NODE_ID, sockets[fd-1].dest.addr, 22, PROTOCOL_TCP, 0, &tcpPack, sizeof(tcp_pack));
-        //dbg(TRANSPORT_CHANNEL, "Routing Packet to node %d\n", sockets[fd-1].dest.addr);
+        //dbg(GENERAL_CHANNEL, "Routing Packet to node %d\n", sockets[fd-1].dest.addr);
         call DistanceVectorRouting.routePacket(&ipPack);
         return bytes;
     }
@@ -712,19 +712,19 @@ implementation{
     }
 
     void printSenderInfo(uint8_t fd) {
-        dbg(TRANSPORT_CHANNEL, "fd %u, socket %u\n", fd, fd-1);
-        dbg(TRANSPORT_CHANNEL, "Last Acked %u.\n", sockets[fd-1].lastAck);
-        dbg(TRANSPORT_CHANNEL, "Last Sent %u.\n", sockets[fd-1].lastSent);
-        dbg(TRANSPORT_CHANNEL, "Last Writtin %u.\n", sockets[fd-1].lastWritten);
-        dbg(TRANSPORT_CHANNEL, "Effective window %u.\n", calcEffWindow(fd));
+        dbg(GENERAL_CHANNEL, "fd %u, socket %u\n", fd, fd-1);
+        dbg(GENERAL_CHANNEL, "Last Acked %u.\n", sockets[fd-1].lastAck);
+        dbg(GENERAL_CHANNEL, "Last Sent %u.\n", sockets[fd-1].lastSent);
+        dbg(GENERAL_CHANNEL, "Last Writtin %u.\n", sockets[fd-1].lastWritten);
+        dbg(GENERAL_CHANNEL, "Effective window %u.\n", calcEffWindow(fd));
     }  
 
     void printReceiverInfo(uint8_t fd) {
-        dbg(TRANSPORT_CHANNEL, "fd %u, socket %u\n", fd, fd-1);
-        dbg(TRANSPORT_CHANNEL, "Last Read %u.\n", sockets[fd-1].lastRead);
-        dbg(TRANSPORT_CHANNEL, "Last Received %u.\n", sockets[fd-1].lastRcvd);
-        dbg(TRANSPORT_CHANNEL, "Next Expected %u.\n", sockets[fd-1].nextExpected);
-        dbg(TRANSPORT_CHANNEL, "Advertised window %u.\n", sockets[fd-1].effectiveWindow);
+        dbg(GENERAL_CHANNEL, "fd %u, socket %u\n", fd, fd-1);
+        dbg(GENERAL_CHANNEL, "Last Read %u.\n", sockets[fd-1].lastRead);
+        dbg(GENERAL_CHANNEL, "Last Received %u.\n", sockets[fd-1].lastRcvd);
+        dbg(GENERAL_CHANNEL, "Next Expected %u.\n", sockets[fd-1].nextExpected);
+        dbg(GENERAL_CHANNEL, "Advertised window %u.\n", sockets[fd-1].effectiveWindow);
     }    
 
     void zeroTCPPacket() {
@@ -750,7 +750,7 @@ implementation{
     event void TransmissionTimer.fired() {
         uint8_t i;
         if(call TransmissionTimer.isOneShot()) {
-            dbg(TRANSPORT_CHANNEL, "TCP starting on node %u\n", TOS_NODE_ID);
+            dbg(GENERAL_CHANNEL, "TCP starting on node %u\n", TOS_NODE_ID);
             call TransmissionTimer.startPeriodic(1024 + (uint16_t) (call Random.rand16()%1000));
         }
         // Iterate over sockets
@@ -764,12 +764,12 @@ implementation{
                             sockets[i].lastSent = sockets[i].lastAck;
                             // Resend window
                             sendWindow(i+1);
-                            dbg(TRANSPORT_CHANNEL, "Resending at %u\n", sockets[i].lastSent+1);
+                            dbg(GENERAL_CHANNEL, "Resending at %u\n", sockets[i].lastSent+1);
                             continue;
                         }
                         break;
                     case SYN_SENT:
-                        dbg(TRANSPORT_CHANNEL, "Retransmitting SYN\n");
+                        dbg(GENERAL_CHANNEL, "Retransmitting SYN\n");
                         // Resend SYN
                         sendTCPPacket(i+1, SYN);
                         break;
@@ -779,7 +779,7 @@ implementation{
                         break;
                     case CLOSE_WAIT:
                         // Resend FIN
-                        dbg(TRANSPORT_CHANNEL, "Sending final FIN. In LAST_ACK.\n");
+                        dbg(GENERAL_CHANNEL, "Sending final FIN. In LAST_ACK.\n");
                         sendTCPPacket(i+1, FIN);
                         sockets[i].state = LAST_ACK;
                         // Set final RTO
@@ -787,14 +787,14 @@ implementation{
                         break;
                     case FIN_WAIT_1:
                         // Resend FIN
-                        dbg(TRANSPORT_CHANNEL, "Resending last FIN\n");
+                        dbg(GENERAL_CHANNEL, "Resending last FIN\n");
                         sendTCPPacket(i+1, FIN);
                         break;
                     case LAST_ACK:
                     case TIME_WAIT:
                         // Timeout! Close the connection
                         sockets[i].state = CLOSED;
-                        dbg(TRANSPORT_CHANNEL, "Connection closed\n");
+                        dbg(GENERAL_CHANNEL, "Connection closed\n");
                 }
             }
             if(sockets[i].state == ESTABLISHED && sockets[i].type == CLIENT) {
@@ -802,7 +802,7 @@ implementation{
                 sendWindow(i+1);
             } else if(sockets[i].state == LAST_ACK) {
                 // Resend FIN
-                dbg(TRANSPORT_CHANNEL, "Resending last FIN\n");
+                dbg(GENERAL_CHANNEL, "Resending last FIN\n");
                 sendTCPPacket(i+1, FIN);
             }
         }

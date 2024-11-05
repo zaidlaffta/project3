@@ -60,7 +60,7 @@ implementation{
         uint32_t connId;
         socket_addr_t addr;
         if(numServers >= MAX_NUM_OF_SOCKETS) {
-            dbg(TRANSPORT_CHANNEL, "Cannot start server\n");
+            dbg(GENERAL_CHANNEL, "Cannot start server\n");
             return;
         }
         for(i = 0; i < MAX_NUM_OF_SOCKETS; i++) {
@@ -100,7 +100,7 @@ implementation{
         socket_addr_t serverAddr;
         // Check if there is available space
         if(numClients >= MAX_NUM_OF_SOCKETS) {
-            dbg(TRANSPORT_CHANNEL, "Cannot start client\n");
+            dbg(GENERAL_CHANNEL, "Cannot start client\n");
             return;
         }
         // Set up some structs
@@ -116,12 +116,12 @@ implementation{
             // Open a socket
             client[i].sockfd = call Transport.socket();
             if(client[i].sockfd == 0) {
-                dbg(TRANSPORT_CHANNEL, "No available sockets. Exiting!\n");
+                dbg(GENERAL_CHANNEL, "No available sockets. Exiting!\n");
                 return;
             }
             // Bind the socket to the src address
             if(call Transport.bind(client[i].sockfd, &clientAddr) == FAIL) {
-                dbg(TRANSPORT_CHANNEL, "Failed to bind sockets. Exiting!\n");
+                dbg(GENERAL_CHANNEL, "Failed to bind sockets. Exiting!\n");
                 return;
             }
             // Add the bound socket index to the connection map
@@ -129,7 +129,7 @@ implementation{
             call ConnectionMap.insert(connId, i+1);
             // Connect to the remote server
             if(call Transport.connect(client[i].sockfd, &serverAddr) == FAIL) {
-                dbg(TRANSPORT_CHANNEL, "Failed to connect to server. Exiting!\n");
+                dbg(GENERAL_CHANNEL, "Failed to connect to server. Exiting!\n");
                 return;
             }
             // Remove the old connection and add the newly connected socket index
@@ -143,7 +143,7 @@ implementation{
             client[i].bytesTransferred = 0;
             // Start the timer if it isn't running
             if(!(call AppTimer.isRunning())) {
-                //dbg(TRANSPORT_CHANNEL, "Starting transport apptimer\n");
+                //dbg(GENERAL_CHANNEL, "Starting transport apptimer\n");
                 call AppTimer.startPeriodic(1024 + (uint16_t) (call Random.rand16()%1000));
             }
             numClients++;
@@ -157,7 +157,7 @@ implementation{
         connId = ((uint32_t)TOS_NODE_ID << 24) | ((uint32_t)srcPort << 16) | ((uint32_t)dest << 16) | ((uint32_t)destPort << 16);
         sockIdx = call ConnectionMap.get(connId);
         if(sockIdx == 0) {
-            dbg(TRANSPORT_CHANNEL, "Client not found\n");
+            dbg(GENERAL_CHANNEL, "Client not found\n");
             return;
         }
         // Close the socket
@@ -168,7 +168,7 @@ implementation{
     }
 
     event void AppTimer.fired() {
-        //dbg(TRANSPORT_CHANNEL, "firing transport apptimer\n");
+        //dbg(GENERAL_CHANNEL, "firing transport apptimer\n");
         handleServer();
         handleClient();
     }
@@ -178,7 +178,7 @@ implementation{
         uint16_t data, length;
         bool isRead = FALSE;
         bytes = 0;
-        //dbg(TRANSPORT_CHANNEL, "In handle server\n");
+        //dbg(GENERAL_CHANNEL, "In handle server\n");
 
         for(i = 0; i < numServers; i++) {
             if(server[i].sockfd == 0) {
@@ -207,7 +207,7 @@ implementation{
             // Print out received data
             while(getServerBufferOccupied(i) >= 2) {
                 if(!isRead) {
-                    dbg(TRANSPORT_CHANNEL, "Reading Data at %u: ", server[i].bytesRead);
+                    dbg(GENERAL_CHANNEL, "Reading Data at %u: ", server[i].bytesRead);
                     isRead = TRUE;
                 }
                 if(server[i].bytesRead == TCP_APP_BUFFER_SIZE) {
